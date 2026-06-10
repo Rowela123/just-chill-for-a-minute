@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Just Chill for a Minute | A 60 Second Calm Reset</title>
+  <meta name="description" content="Take a 60 second break from scrolling. No typing, no tabs, no distractions. Just sit by the fire and chill for a minute." />
+
+  <link rel="icon" type="image/png" href="https://cdn.shopify.com/s/files/1/0972/5873/3895/files/Untitled_design.png?v=1775653443">
+  <link rel="apple-touch-icon" href="https://cdn.shopify.com/s/files/1/0972/5873/3895/files/Untitled_design.png?v=1775653443">
+
+  <meta property="og:title" content="Just Chill for a Minute" />
+  <meta property="og:description" content="Take a 60 second break from scrolling. No typing, no tabs, no distractions. Just sit by the fire." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://justchillforaminute.com/" />
+  <meta property="og:site_name" content="Just Chill for a Minute" />
+  <meta property="og:image" content="https://cdn.shopify.com/s/files/1/0972/5873/3895/files/Untitled_design.png?v=1775653443" />
+  <meta property="og:image:secure_url" content="https://cdn.shopify.com/s/files/1/0972/5873/3895/files/Untitled_design.png?v=1775653443" />
+  <meta property="og:image:alt" content="Just Chill for a Minute" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Just Chill for a Minute" />
+  <meta name="twitter:description" content="Take a 60 second break from scrolling. No typing, no tabs, no distractions. Just sit by the fire." />
+  <meta name="twitter:image" content="https://cdn.shopify.com/s/files/1/0972/5873/3895/files/Untitled_design.png?v=1775653443" />
+  <meta name="twitter:image:alt" content="Just Chill for a Minute" />
+
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    #dnf-app {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      z-index: 999999;
+    }
+
+    #dnf-video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      transform: translate(-50%, -50%) scale(1.08);
+      filter: brightness(0.78);
+      z-index: 1;
+    }
+
+    .dnf-screen {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      background: rgba(0, 0, 0, 0.42);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    #dnf-running-screen {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: none;
+      pointer-events: none;
+    }
+
+    .dnf-content {
+      max-width: 760px;
+      width: 100%;
+    }
+
+    .dnf-content h1 {
+      font-size: clamp(42px, 7vw, 92px);
+      line-height: 1.05;
+      margin: 0 0 16px;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .dnf-content h2 {
+      font-size: clamp(38px, 6vw, 78px);
+      line-height: 1.05;
+      margin: 0 0 16px;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .dnf-content p {
+      font-size: clamp(17px, 2vw, 24px);
+      line-height: 1.5;
+      margin: 0 auto 26px;
+      max-width: 640px;
+      color: #fff;
+    }
+
+    #dnf-start,
+    #dnf-restart,
+    .share-button {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      background: #fff;
+      color: #111;
+      padding: 15px 36px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      margin: 6px;
+    }
+
+    #dnf-start:hover,
+    #dnf-restart:hover,
+    .share-button:hover {
+      transform: translateY(-1px);
+    }
+
+    #dnf-timer {
+      position: absolute;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(24px, 4vw, 46px);
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: rgba(255, 255, 255, 0.92);
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.65);
+    }
+
+    #dnf-reset-screen,
+    #dnf-complete-screen {
+      display: none;
+    }
+
+    .share-row {
+      margin-top: 10px;
+    }
+
+    #copy-message {
+      margin-top: 14px;
+      font-size: 15px;
+      opacity: 0.9;
+      display: none;
+    }
+
+    @media screen and (max-width: 749px) {
+      #dnf-video {
+        transform: translate(-50%, -50%) scale(1.2);
+      }
+
+      #dnf-timer {
+        bottom: 22px;
+      }
+
+      #dnf-start,
+      #dnf-restart,
+      .share-button {
+        font-size: 16px;
+        padding: 13px 26px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="dnf-app">
+    <video id="dnf-video" muted playsinline preload="auto">
+      <source src="https://cdn.shopify.com/videos/c/o/v/0041cf1644104d47b9ea26b3c88b7092.mp4" type="video/mp4">
+    </video>
+
+    <audio id="dnf-fire-audio" loop preload="auto">
+      <source src="https://cdn.shopify.com/s/files/1/0972/5873/3895/files/soundreality-fire-crackling-sound-499636.mp3?v=1781021515" type="audio/mpeg">
+    </audio>
+
+    <audio id="dnf-waves-audio" loop preload="auto">
+      <source src="https://cdn.shopify.com/s/files/1/0972/5873/3895/files/rmultimediaeu-ocean-waves-250310.mp3?v=1781021515" type="audio/mpeg">
+    </audio>
+
+    <audio id="dnf-dog-audio" preload="auto">
+      <source src="https://cdn.shopify.com/s/files/1/0972/5873/3895/files/dragon-studio-free-dog-bark-419014.mp3?v=1781021512" type="audio/mpeg">
+    </audio>
+
+    <div id="dnf-start-screen" class="dnf-screen">
+      <div class="dnf-content">
+        <h1>Just chill for a minute.</h1>
+        <p>No scrolling. No typing. No tabs. Just sit by the fire.</p>
+        <button id="dnf-start">Start</button>
+      </div>
+    </div>
+
+    <div id="dnf-running-screen">
+      <div id="dnf-timer">01:00</div>
+    </div>
+
+    <div id="dnf-reset-screen" class="dnf-screen">
+      <div class="dnf-content">
+        <h2 id="dnf-reset-title">You moved.</h2>
+        <p>Timer reset.</p>
+        <button id="dnf-restart">Start Again</button>
+      </div>
+    </div>
+
+    <div id="dnf-complete-screen" class="dnf-screen">
+      <div class="dnf-content">
+        <h2>You made it.</h2>
+        <p>That was probably harder than it should have been.</p>
+
+        <div class="share-row">
+          <a
+            class="share-button"
+            href="https://twitter.com/intent/tweet?text=I%20just%20chilled%20for%20a%20minute.%20No%20scrolling.%20No%20typing.%20No%20tabs.%20Just%20fire.&url=https%3A%2F%2Fjustchillforaminute.com%2F"
+            target="_blank"
+            rel="noopener"
+          >
+            Share on X
+          </a>
+
+          <a
+            class="share-button"
+            href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fjustchillforaminute.com%2F"
+            target="_blank"
+            rel="noopener"
+          >
+            Share on Facebook
+          </a>
+
+          <button id="copy-link" class="share-button">Copy Link</button>
+        </div>
+
+        <div id="copy-message">Link copied.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const video = document.getElementById('dnf-video');
+      const fireAudio = document.getElementById('dnf-fire-audio');
+      const wavesAudio = document.getElementById('dnf-waves-audio');
+      const dogAudio = document.getElementById('dnf-dog-audio');
+
+      const startScreen = document.getElementById('dnf-start-screen');
+      const runningScreen = document.getElementById('dnf-running-screen');
+      const resetScreen = document.getElementById('dnf-reset-screen');
+      const completeScreen = document.getElementById('dnf-complete-screen');
+      const resetTitle = document.getElementById('dnf-reset-title');
+      const startBtn = document.getElementById('dnf-start');
+      const restartBtn = document.getElementById('dnf-restart');
+      const timerEl = document.getElementById('dnf-timer');
+      const copyBtn = document.getElementById('copy-link');
+      const copyMessage = document.getElementById('copy-message');
+
+      let timeLeft = 60;
+      let timerInterval = null;
+      let hasStarted = false;
+      let completed = false;
+      let gracePeriod = false;
+      let firstMouseMoveIgnored = false;
+      let dogTimeout = null;
+
+      const USE_DOG_SOUND = true;
+      const DOG_VOLUME = 0.02;
+
+      function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+      }
+
+      function updateTimer() {
+        timerEl.textContent = formatTime(timeLeft);
+      }
+
+      function requestFullScreen() {
+        const el = document.documentElement;
+
+        if (el.requestFullscreen) {
+          el.requestFullscreen().catch(function () {});
+        } else if (el.webkitRequestFullscreen) {
+          el.webkitRequestFullscreen();
+        } else if (el.msRequestFullscreen) {
+          el.msRequestFullscreen();
+        }
+      }
+
+      function setVideoToLastOneMinute() {
+        if (video.duration && video.duration > 0) {
+          video.playbackRate = video.duration / 60;
+        }
+      }
+
+      function stopAllAudio() {
+        clearTimeout(dogTimeout);
+
+        fireAudio.pause();
+        wavesAudio.pause();
+        dogAudio.pause();
+
+        fireAudio.currentTime = 0;
+        wavesAudio.currentTime = 0;
+        dogAudio.currentTime = 0;
+      }
+
+      function playDogBark() {
+        if (!USE_DOG_SOUND || !hasStarted || completed) return;
+
+        dogAudio.pause();
+        dogAudio.currentTime = 0;
+        dogAudio.volume = DOG_VOLUME;
+        dogAudio.play().catch(function () {});
+      }
+
+      video.addEventListener('loadedmetadata', setVideoToLastOneMinute);
+
+      function startExperience() {
+        clearInterval(timerInterval);
+        stopAllAudio();
+
+        requestFullScreen();
+
+        timeLeft = 60;
+        hasStarted = true;
+        completed = false;
+        gracePeriod = true;
+        firstMouseMoveIgnored = false;
+
+        updateTimer();
+
+        startScreen.style.display = 'none';
+        resetScreen.style.display = 'none';
+        completeScreen.style.display = 'none';
+        runningScreen.style.display = 'block';
+        copyMessage.style.display = 'none';
+
+        video.currentTime = 0;
+        setVideoToLastOneMinute();
+        video.play();
+
+        fireAudio.currentTime = 0;
+        wavesAudio.currentTime = 0;
+
+        fireAudio.volume = 0.85;
+        wavesAudio.volume = 0.55;
+
+        fireAudio.play().catch(function () {});
+        wavesAudio.play().catch(function () {});
+
+        if (USE_DOG_SOUND) {
+          dogTimeout = setTimeout(playDogBark, 43000);
+        }
+
+        setTimeout(function () {
+          gracePeriod = false;
+        }, 1500);
+
+        timerInterval = setInterval(function () {
+          timeLeft--;
+          updateTimer();
+
+          if (timeLeft <= 0) {
+            completeExperience();
+          }
+        }, 1000);
+      }
+
+      function resetExperience(reason) {
+        if (!hasStarted || completed || gracePeriod) return;
+
+        clearInterval(timerInterval);
+
+        hasStarted = false;
+        completed = false;
+        timeLeft = 60;
+
+        video.pause();
+        video.currentTime = 0;
+        stopAllAudio();
+
+        updateTimer();
+
+        runningScreen.style.display = 'none';
+        startScreen.style.display = 'none';
+        completeScreen.style.display = 'none';
+        resetScreen.style.display = 'flex';
+
+        resetTitle.textContent = reason;
+      }
+
+      function completeExperience() {
+        clearInterval(timerInterval);
+
+        hasStarted = false;
+        completed = true;
+
+        video.pause();
+        stopAllAudio();
+
+        timerEl.textContent = '00:00';
+
+        runningScreen.style.display = 'none';
+        startScreen.style.display = 'none';
+        resetScreen.style.display = 'none';
+        completeScreen.style.display = 'flex';
+      }
+
+      function copyLink() {
+        const link = 'https://justchillforaminute.com/';
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(link).then(function () {
+            copyMessage.style.display = 'block';
+          }).catch(function () {
+            fallbackCopy(link);
+          });
+        } else {
+          fallbackCopy(link);
+        }
+      }
+
+      function fallbackCopy(text) {
+        const tempInput = document.createElement('input');
+        tempInput.value = text;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        copyMessage.style.display = 'block';
+      }
+
+      startBtn.addEventListener('click', startExperience);
+      restartBtn.addEventListener('click', startExperience);
+      copyBtn.addEventListener('click', copyLink);
+
+      document.addEventListener('mousemove', function () {
+        if (!firstMouseMoveIgnored) {
+          firstMouseMoveIgnored = true;
+          return;
+        }
+
+        resetExperience('You moved.');
+      });
+
+      document.addEventListener('keydown', function () {
+        resetExperience('You typed.');
+      });
+
+      document.addEventListener('scroll', function () {
+        resetExperience('You scrolled.');
+      });
+
+      document.addEventListener('touchmove', function () {
+        resetExperience('You moved.');
+      });
+
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+          resetExperience('You left the page.');
+        }
+      });
+
+      document.addEventListener('fullscreenchange', function () {
+        if (!document.fullscreenElement && hasStarted) {
+          resetExperience('You left fullscreen.');
+        }
+      });
+
+      updateTimer();
+    });
+  </script>
+</body>
+</html>
