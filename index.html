@@ -82,7 +82,7 @@
     }
 
     .dnf-content {
-      max-width: 760px;
+      max-width: 800px;
       width: 100%;
     }
 
@@ -105,9 +105,22 @@
     .dnf-content p {
       font-size: clamp(17px, 2vw, 24px);
       line-height: 1.5;
-      margin: 0 auto 26px;
-      max-width: 640px;
+      margin: 0 auto 24px;
+      max-width: 660px;
       color: #fff;
+    }
+
+    .dnf-live-stats {
+      margin: 0 auto 26px;
+      max-width: 680px;
+      font-size: clamp(14px, 1.6vw, 18px);
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.86);
+    }
+
+    .dnf-live-stats strong {
+      color: #fff;
+      font-weight: 700;
     }
 
     #dnf-start,
@@ -203,6 +216,11 @@
       <div class="dnf-content">
         <h1>Just chill for a minute.</h1>
         <p>No scrolling. No typing. No tabs. Just sit by the fire.</p>
+
+        <div id="start-stats" class="dnf-live-stats">
+          Loading live stats...
+        </div>
+
         <button id="dnf-start">Start</button>
       </div>
     </div>
@@ -215,6 +233,11 @@
       <div class="dnf-content">
         <h2 id="dnf-reset-title">You moved.</h2>
         <p>Timer reset.</p>
+
+        <div id="fail-stats" class="dnf-live-stats">
+          Loading live stats...
+        </div>
+
         <button id="dnf-restart">Start Again</button>
       </div>
     </div>
@@ -222,7 +245,11 @@
     <div id="dnf-complete-screen" class="dnf-screen">
       <div class="dnf-content">
         <h2>You made it.</h2>
-        <p>That was probably harder than it should have been.</p>
+        <p id="complete-message">That was probably harder than it should have been.</p>
+
+        <div id="complete-stats" class="dnf-live-stats">
+          Loading live stats...
+        </div>
 
         <div class="share-row">
           <a
@@ -269,6 +296,11 @@
       const copyBtn = document.getElementById('copy-link');
       const copyMessage = document.getElementById('copy-message');
 
+      const startStatsEl = document.getElementById('start-stats');
+      const failStatsEl = document.getElementById('fail-stats');
+      const completeStatsEl = document.getElementById('complete-stats');
+      const completeMessageEl = document.getElementById('complete-message');
+
       let timeLeft = 60;
       let timerInterval = null;
       let hasStarted = false;
@@ -276,9 +308,16 @@
       let gracePeriod = false;
       let firstMouseMoveIgnored = false;
       let dogTimeout = null;
+      let currentStats = {
+        starts: 0,
+        fails: 0,
+        completes: 0,
+        failRate: 0
+      };
 
       const USE_DOG_SOUND = true;
       const DOG_VOLUME = 0.02;
+      const STATS_ENDPOINT = '/.netlify/functions/stats';
 
       function formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
@@ -286,8 +325,86 @@
         return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
       }
 
+      function formatNumber(number) {
+        return Number(number || 0).toLocaleString('en-GB');
+      }
+
+      function ordinal(number) {
+        const n = Number(number || 0);
+        const suffixes = ['th', 'st', 'nd', 'rd'];
+        const value = n % 100;
+        return n + (suffixes[(value - 20) % 10] || suffixes[value] || suffixes[0]);
+      }
+
       function updateTimer() {
         timerEl.textContent = formatTime(timeLeft);
+      }
+
+      function renderStats(stats) {
+        currentStats = stats || currentStats;
+
+        const madeIt = formatNumber(currentStats.completes);
+        const failRate = Number(currentStats.failRate || 0);
+
+        const startText = `
+          <strong>${madeIt}</strong> people have made it so far.
+          <br>
+          <strong>${failRate}%</strong> of people fail.
+        `;
+
+        const failText = `
+          You’re not alone.
+          <strong>${failRate}%</strong> of people fail.
+        `;
+
+        const completeText = `
+          You’re the <strong>${ordinal(currentStats.completes)}</strong> person to make it.
+          <br>
+          <strong>${failRate}%</strong> of people fail.
+        `;
+
+        startStatsEl.innerHTML = startText;
+        failStatsEl.innerHTML = failText;
+        completeStatsEl.innerHTML = completeText;
+      }
+
+      async function loadStats() {
+        try {
+          const response = await fetch(STATS_ENDPOINT, {
+            method: 'GET'
+          });
+
+          if (!response.ok) return;
+
+          const stats = await response.json();
+          renderStats(stats);
+        } catch (error) {
+          startStatsEl.style.display = 'none';
+          failStatsEl.style.display = 'none';
+          completeStatsEl.style.display = 'none';
+        }
+      }
+
+      async function postStat(eventType) {
+        try {
+          const response = await fetch(STATS_ENDPOINT, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              eventType: eventType
+            })
+          });
+
+          if (!response.ok) return currentStats;
+
+          const stats = await response.json();
+          renderStats(stats);
+          return stats;
+        } catch (error) {
+          return currentStats;
+        }
       }
 
       function requestFullScreen() {
@@ -331,9 +448,11 @@
 
       video.addEventListener('loadedmetadata', setVideoToLastOneMinute);
 
-      function startExperience() {
+      async function startExperience() {
         clearInterval(timerInterval);
         stopAllAudio();
+
+        await postStat('start');
 
         requestFullScreen();
 
@@ -382,7 +501,7 @@
         }, 1000);
       }
 
-      function resetExperience(reason) {
+      async function resetExperience(reason) {
         if (!hasStarted || completed || gracePeriod) return;
 
         clearInterval(timerInterval);
@@ -395,6 +514,8 @@
         video.currentTime = 0;
         stopAllAudio();
 
+        await postStat('fail');
+
         updateTimer();
 
         runningScreen.style.display = 'none';
@@ -405,7 +526,7 @@
         resetTitle.textContent = reason;
       }
 
-      function completeExperience() {
+      async function completeExperience() {
         clearInterval(timerInterval);
 
         hasStarted = false;
@@ -415,6 +536,10 @@
         stopAllAudio();
 
         timerEl.textContent = '00:00';
+
+        await postStat('complete');
+
+        completeMessageEl.textContent = 'That was probably harder than it should have been.';
 
         runningScreen.style.display = 'none';
         startScreen.style.display = 'none';
@@ -484,6 +609,7 @@
       });
 
       updateTimer();
+      loadStats();
     });
   </script>
 </body>
