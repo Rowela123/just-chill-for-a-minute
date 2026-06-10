@@ -42,6 +42,18 @@ exports.handler = async function (event) {
       );
 
       const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          statusCode: response.status,
+          headers,
+          body: JSON.stringify({
+            error: 'Supabase GET failed.',
+            details: data
+          })
+        };
+      }
+
       const stats = Array.isArray(data) ? data[0] : data;
 
       return {
@@ -81,6 +93,19 @@ exports.handler = async function (event) {
       );
 
       const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          statusCode: response.status,
+          headers,
+          body: JSON.stringify({
+            error: 'Supabase RPC failed.',
+            eventType: eventType,
+            details: data
+          })
+        };
+      }
+
       const stats = Array.isArray(data) ? data[0] : data;
 
       return {
