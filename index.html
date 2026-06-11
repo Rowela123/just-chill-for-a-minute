@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HYM0Y33MS3"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-HYM0Y33MS3');
+  </script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -401,6 +411,14 @@
 
           const stats = await response.json();
           renderStats(stats);
+
+          if (typeof gtag === 'function') {
+            gtag('event', eventType, {
+              event_category: 'chill_minute',
+              event_label: eventType
+            });
+          }
+
           return stats;
         } catch (error) {
           return currentStats;
@@ -549,6 +567,13 @@
 
       function copyLink() {
         const link = 'https://justchillforaminute.com/';
+
+        if (typeof gtag === 'function') {
+          gtag('event', 'share_copy_link', {
+            event_category: 'chill_minute',
+            event_label: 'copy_link'
+          });
+        }
 
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(link).then(function () {
